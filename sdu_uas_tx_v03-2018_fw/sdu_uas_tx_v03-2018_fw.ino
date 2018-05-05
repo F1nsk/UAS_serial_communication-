@@ -40,6 +40,7 @@ Revision
 //#include <std_msgs/Empty.h>
 
 //ros::NodeHandle nh;
+#include <SoftwareSerial.h>
 
 /****************************************************************************/
 /* input defines */
@@ -231,7 +232,7 @@ void led()
 }
 
 /****************************************************************************/
-void switches(); 
+void switches()
 {
 
 
@@ -294,6 +295,47 @@ for(i = 0; i < 5; i++)
 }
 
 
+/****************************************************************************/
+void echo()
+{
+
+  if (Serial.available()) {
+    Serial.write(Serial.read());
+  }
+  if (Serial.available()) {
+     Serial.write(Serial.read());
+  
+}
+
+/****************************************************************************/
+void debug() 
+{
+  
+  // debug: output analog and digital input values to the serial port
+  Serial.print (analog[0]);
+  Serial.print (" ");
+  Serial.print (analog[1]);
+  Serial.print (" ");
+  Serial.print (analog[2]);
+  Serial.print (" ");
+  Serial.print (analog[3]);
+  Serial.print (" ");
+  Serial.print (analog[4]);
+  Serial.print (" ");
+  Serial.print (analog[5]);
+  Serial.print (" ");
+  Serial.print (analog[6]);
+  Serial.print (" ");
+  Serial.print (analog[7]);
+  Serial.print (" ");
+  Serial.print (digitalRead(PIN_LEFT_BUTTON));
+  Serial.print (" ");
+  Serial.print (digitalRead(PIN_RIGHT_BUTTON));
+  Serial.print (" ");
+  Serial.print (digitalRead(PIN_2_POS_SW_LEFT));
+  Serial.print (" ");
+  Serial.println (digitalRead(PIN_2_POS_SW_RIGHT)); */
+}
 
 
 /****************************************************************************/
@@ -323,30 +365,6 @@ void loop()
   switches(); 
   
 
-  // debug: output analog and digital input values to the serial port
-  /* Serial.print (analog[0]);
-  Serial.print (" ");
-  Serial.print (analog[1]);
-  Serial.print (" ");
-  Serial.print (analog[2]);
-  Serial.print (" ");
-  Serial.print (analog[3]);
-  Serial.print (" ");
-  Serial.print (analog[4]);
-  Serial.print (" ");
-  Serial.print (analog[5]);
-  Serial.print (" ");
-  Serial.print (analog[6]);
-  Serial.print (" ");
-  Serial.print (analog[7]);
-  Serial.print (" ");
-  Serial.print (digitalRead(PIN_LEFT_BUTTON));
-  Serial.print (" ");
-  Serial.print (digitalRead(PIN_RIGHT_BUTTON));
-  Serial.print (" ");
-  Serial.print (digitalRead(PIN_2_POS_SW_LEFT));
-  Serial.print (" ");
-  Serial.println (digitalRead(PIN_2_POS_SW_RIGHT)); */
     
   delay(10);
 }
