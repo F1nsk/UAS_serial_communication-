@@ -301,10 +301,13 @@ void echo()
 
   if (Serial.available()) {
     Serial.write(Serial.read());
+    Serial.write("acknowledge");
   }
   if (Serial.available()) {
      Serial.write(Serial.read());
+     Serial.write("acknowledge");
   
+}
 }
 
 /****************************************************************************/
@@ -334,7 +337,7 @@ void debug()
   Serial.print (" ");
   Serial.print (digitalRead(PIN_2_POS_SW_LEFT));
   Serial.print (" ");
-  Serial.println (digitalRead(PIN_2_POS_SW_RIGHT)); */
+  Serial.println (digitalRead(PIN_2_POS_SW_RIGHT)); 
 }
 
 
@@ -363,6 +366,7 @@ void loop()
   
   autoQuadArming();
   switches(); 
+  echo(); 
   
 
     
