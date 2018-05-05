@@ -158,9 +158,75 @@ ISR(TIMER1_COMPA_vect)
 }
 /****************************************************************************/
 
-throttle(float value)
+void throttle(float value)
+{
 
+ float temp = value;  
 
+  ppm[0] = temp*700/1023 + 1150 -6; // throttle 
+ 
+  
+}
+
+/****************************************************************************/
+
+void aileron(float value)
+{
+
+ float temp = value;  
+
+    ppm[1] =  temp*700/1023 + 1150; // roll (aileron)
+ 
+  
+}
+
+/****************************************************************************/
+
+void pitch(float value)
+{
+
+ float temp = value;  
+
+ ppm[2] = (1023-temp)*700/1023 + 1150; // pitch (elevator)
+ 
+  
+}
+/****************************************************************************/
+
+void rudder(float value)
+{
+
+ float temp = value;  
+
+  ppm[3] = temp*700/1023 + 1150; // yaw (rudder)
+ 
+  
+}
+
+/****************************************************************************/
+
+void readInputs()
+{
+  analog[0] = analogRead(PIN_LEFT_Y);
+  analog[1] = analogRead(PIN_LEFT_X);
+  analog[2] = analogRead(PIN_RIGHT_Y);
+  analog[3] = analogRead(PIN_RIGHT_X);
+  analog[4] = analogRead(PIN_3_POS_SW_LEFT);
+  analog[5] = analogRead(PIN_3_POS_SW_RIGHT);
+  analog[6] = analogRead(PIN_POT);
+  analog[7] = analogRead(PIN_BATT_VOLT);
+  
+}
+
+/****************************************************************************/
+
+void led() 
+{
+  if (count % 200 == 0)
+    digitalWrite(PIN_LED_GREEN, HIGH);
+  else
+    digitalWrite(PIN_LED_GREEN, LOW);
+}
 
 
 
@@ -173,26 +239,23 @@ void loop()
   count ++;
 
   // update LED
-  if (count % 200 == 0)
-    digitalWrite(PIN_LED_GREEN, HIGH);
-  else
-    digitalWrite(PIN_LED_GREEN, LOW);
+
+  led();
 
   // read analog input
-  analog[0] = analogRead(PIN_LEFT_Y);
-  analog[1] = analogRead(PIN_LEFT_X);
-  analog[2] = analogRead(PIN_RIGHT_Y);
-  analog[3] = analogRead(PIN_RIGHT_X);
-  analog[4] = analogRead(PIN_3_POS_SW_LEFT);
-  analog[5] = analogRead(PIN_3_POS_SW_RIGHT);
-  analog[6] = analogRead(PIN_POT);
-  analog[7] = analogRead(PIN_BATT_VOLT);
+   
+  readInputs(); 
+
 
   // map to ppm output
-  ppm[0] = analog[0]*700/1023 + 1150 -6; // throttle
-  ppm[1] =  analog[3]*700/1023 + 1150; // roll (aileron)
-  ppm[2] = (1023-analog[2])*700/1023 + 1150; // pitch (elevator)
-  ppm[3] = analog[1]*700/1023 + 1150; // yaw (rudder)
+  throttle(analog[0]);
+  aileron(analog[3]);
+  pitch(analog[2]);
+  rudder(analog[1]); 
+  
+
+  
+  
 
   // handle special case of arming AutoQuad
   if (analog[0] < 450 && analog[1] > 1000)
