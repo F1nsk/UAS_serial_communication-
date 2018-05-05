@@ -80,6 +80,14 @@ long analog[analog_number];
 short count;
 boolean led_state;
 boolean buzzer_state;
+int throttleVal;
+int aileronVal;
+int pitchVal;
+int rudderVal; 
+
+  
+
+
 
 /****************************************************************************/
 void setup()
@@ -282,16 +290,19 @@ void rosCommunication()
   
 }
 /****************************************************************************/
-void messageReading(int mainArr[]) 
+void messageReading(String msg)  
 {
 
- 
-int *arr[5];
+String temp; 
 
-int i;
-for(i = 0; i < 5; i++)
-    arr[i] = &mainArr[i*10];
-    
+temp = String(Serial.readStringUntil('$'));
+
+   
+
+ 
+ 
+
+
 }
 
 
