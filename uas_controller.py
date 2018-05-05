@@ -44,7 +44,8 @@ class uas_serial_controller:
 """
     def read_keyboard(self):
         input = raw_input(">> ")
-
+        myStr=str
+        delim =':'
         # quits the program
         if input == 'exit':
             self.ser.close()
@@ -100,7 +101,7 @@ class uas_serial_controller:
         # Decrease elevator - backwards
         if input == 'j':
             self.roll = self.roll + 1
-            print('roll: ',type(self.roll))
+            #print('roll: ',type(self.roll))
             if self.roll == 100 :
                 print('max')
                 self.roll == 100
@@ -108,24 +109,33 @@ class uas_serial_controller:
 
         ###### Sends the characters to the arduino
         else:
-            print('type ' , type(input))
-            self.ser.write(input)
+            # prepare one string for sending
+            myStr = str(self.throttle)
+            myStr += delim
+            myStr +=str(self.roll)
+            myStr += delim
+            myStr +=str(self.elevator)
+            myStr += delim
+            myStr +=str(self.rudder)
+
+            print(myStr)
+            #print('type ' , type(input))
+            self.ser.write(myStr)
             out = ''
 
-            time.sleep(1)
+            time.sleep(1)       # Give the client some time to repons
+
             while self.ser.inWaiting() > 0:
                 out += self.ser.read(1)
 
+            # Print put what was entered in the terminal
             if out != '':
                 print(">>" + out)
 
 
-    def ptest(self):
-        print('test')
-    # Simulate stick controlls
+
 if __name__ == '__main__':
     usc = uas_serial_controller()
-    #   usc.ptest()
-
+    
     while True:
         print(usc.read_keyboard())
