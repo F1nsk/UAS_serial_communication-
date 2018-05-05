@@ -78,6 +78,9 @@ Revision
 long ppm[ppm_number];
 long analog[analog_number];
 short count;
+long maxi[4] = {1020, 1017, 1017, 1010};
+long mini[4] = {35, 58, 49, 34};
+int mid[4] = {519, 546, 520, 524};
 boolean led_state;
 boolean buzzer_state;
 
@@ -222,7 +225,22 @@ void readInputs()
 }
 
 /****************************************************************************/
+void correctInputs()
+{
+  for(i = 0; i<=3; i++){
+    if  (analog[i] > maxi[i]){
+      maxi[i] = analog[i];}
+      
+    if (analog[i] < mini[i]){
+      mini[i] = analog[i];}
+  
+    if(analog[i] <= mid[i]){
+      analog[i] = ((float)analog[i] - (float)mini[i]) / ((float)mid[i]-(float)mini[i]) * (float)512;}
+    else if(analog[i] > mid[i]){
+      analog[i] = ((float)analog[i] - (float)mid[i]) / ((float)maxi[i]-(float)mid[i]) * (float)511 + (float)512;}
+}
 
+/****************************************************************************/
 void led() 
 {
   if (count % 200 == 0)
@@ -355,7 +373,7 @@ void loop()
   // read analog input
    
   readInputs(); 
-
+  correctInputs();
 
   // map to ppm output
   throttle(analog[0]);
