@@ -36,8 +36,10 @@ Revision
 ****************************************************************************/
 /* parameters */
 
-#include <ros.h>
-#include <std_msgs/String.h>
+///#include <ros.h>
+//#include <std_msgs/Empty.h>
+
+//ros::NodeHandle nh;
 
 /****************************************************************************/
 /* input defines */
@@ -228,6 +230,69 @@ void led()
     digitalWrite(PIN_LED_GREEN, LOW);
 }
 
+/****************************************************************************/
+void switches(); 
+{
+
+
+  // handle left 3-way switch
+  if (analog[4] < 300)
+    ppm[4] = 1150;
+  else if (analog[4] < 700)
+    ppm[4] == 1500;
+  else
+    ppm[4] == 1850;
+  
+  // handle right 3-way switch
+  if (analog[6] < 300)
+    ppm[5] = 1150;
+  else if (analog[6] < 700)
+    ppm[5] == 1500;
+  else
+    ppm[5] ==1850; 
+
+  // unused for now 
+  ppm[6] = default_servo_value;
+  ppm[7] = default_servo_value;
+
+  
+}
+
+
+/****************************************************************************/
+void autoQuadArming()
+{
+  
+  // handle special case of arming AutoQuad
+  if (analog[0] < 450 && analog[1] > 1000)
+  {
+    ppm[0] = 1150;
+    ppm[3] = 1850;  
+  }
+
+}
+
+/****************************************************************************/
+
+void rosCommunication()
+{
+ 
+
+  
+}
+/****************************************************************************/
+void messageReading(int mainArr[]) 
+{
+
+ 
+int *arr[5];
+
+int i;
+for(i = 0; i < 5; i++)
+    arr[i] = &mainArr[i*10];
+    
+}
+
 
 
 
@@ -252,37 +317,11 @@ void loop()
   aileron(analog[3]);
   pitch(analog[2]);
   rudder(analog[1]); 
-  
 
   
+  autoQuadArming();
+  switches(); 
   
-
-  // handle special case of arming AutoQuad
-  if (analog[0] < 450 && analog[1] > 1000)
-  {
-    ppm[0] = 1150;
-    ppm[3] = 1850;  
-  }
-
-  // handle left 3-way switch
-  if (analog[4] < 300)
-    ppm[4] = 1150;
-  else if (analog[4] < 700)
-    ppm[4] == 1500;
-  else
-    ppm[4] == 1850;
-  
-  // handle right 3-way switch
-  if (analog[6] < 300)
-    ppm[5] = 1150;
-  else if (analog[6] < 700)
-    ppm[5] == 1500;
-  else
-    ppm[5] ==1850; 
-
-  // unused for now 
-  ppm[6] = default_servo_value;
-  ppm[7] = default_servo_value;
 
   // debug: output analog and digital input values to the serial port
   /* Serial.print (analog[0]);
