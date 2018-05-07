@@ -101,7 +101,7 @@ void setup()
   digitalWrite (PIN_2_POS_SW_LEFT, HIGH);
   digitalWrite (PIN_2_POS_SW_RIGHT, HIGH);
 
-  Serial.begin(300);
+  Serial.begin(115200);
 
   //initiallize default ppm values
   for(int i=0; i<ppm_number; i++)
@@ -317,61 +317,33 @@ void messageReading()
 
 {
 
-  char string[32];
 
 
+ String input = Serial.readString();
+ 
+int commaIndex = input.indexOf(':');
+
+int secondCommaIndex = input.indexOf(':', commaIndex + 1);
+
+int thirdCommaIndex = input.indexOf(':', secondCommaIndex + 1);
+
+String firstValue = input.substring(0, commaIndex);
+String secondValue = input.substring(commaIndex + 1, secondCommaIndex);
+String thirdValue = input.substring(secondCommaIndex + 1); // To the end of the string
+String fourthValue = input.substring(thirdCommaIndex +1); 
 
 
-  char byteRead;
-
-int availableBytes = Serial.available();
-for(int i=0; i<availableBytes; i++)
-{
-   string[i] = Serial.read();
-}
-
-  char* val;
-  //char inputStr[] = "120:555:666:777";
-  char delimiters[] = ":";
-  val = strtok(string, delimiters);
-  int cmd[] = {0, 0, 0, 0};
-  cmd[0] = 0;
-  cmd[1] = 0;
-  cmd[2] = 0;
-  cmd[3] = 0;
-
-   for(int i = 0; i < 4; i++){
-    cmd[i] = atoi(val);
-   // Serial.println(angle[i]);
-    val = strtok(NULL, delimiters);
-  }
-  
-    Serial.print(" cmd 0 "); Serial.println(cmd[0]);
-   Serial.println("------"); 
-   Serial.print(" cmd 1 "); Serial.println(cmd[1]); 
-   Serial.println("------");
-   Serial.print(" cmd 2 "); Serial.println(cmd[2]); 
-   Serial.println("------");
-   Serial.print(" cmd 3 "); Serial.println(cmd[3]); 
-   Serial.println("------");
+int r = firstValue.toInt();
+int g = secondValue.toInt();
+int b = thirdValue.toInt();
+int roev = fourthValue.toInt(); 
 
 
+Serial.println(r); 
+Serial.println(g); 
+Serial.println(b); 
+Serial.println(roev); 
 
-
-
-// Sending the parts to Serial Monitor
-
-
-//  Serial.print("aileron  ");
-//  Serial.print(aileron);
-//  Serial.println();
-//  Serial.print("pitch  ");
-//  Serial.print(pitch);
-//  Serial.println(); 
-//  Serial.print("rudder  ");
-//  Serial.print(rudder);
-//  Serial.println();
-    
   
 }
 
