@@ -166,7 +166,7 @@ ISR(TIMER1_COMPA_vect)
 }
 /****************************************************************************/
 
-void throttle(float value)
+void throttle(float value) 
 {
 
  float temp = value;  
@@ -207,6 +207,11 @@ void rudder(float value)
  float temp = value;  
 
   ppm[3] = temp*700/1023 + 1150; // yaw (rudder)
+
+ //Serial.print("r-temp = "); Serial.println(temp); 
+
+
+
 
  
 }
@@ -314,12 +319,16 @@ void autoQuadArming()
 
 /****************************************************************************/
 void messageReading()
-
 {
 
+static int tempRudder, tempPitch, tempThrottle, tempAileron; 
 
 
- String input = Serial.readString();
+String input = Serial.readString();
+Serial.print(input);
+
+
+
  
 int commaIndex = input.indexOf(':');
 
@@ -333,18 +342,74 @@ String thirdValue = input.substring(secondCommaIndex + 1); // To the end of the 
 String fourthValue = input.substring(thirdCommaIndex +1); 
 
 
-int r = firstValue.toInt();
-int g = secondValue.toInt();
-int b = thirdValue.toInt();
-int roev = fourthValue.toInt(); 
+long rudderVal = secondValue.toInt();
+long aileronVal = fourthValue.toInt();
+long pitchVal = thirdValue.toInt(); 
+long throttleVal = firstValue.toInt();
 
-
-Serial.println(r); 
-Serial.println(g); 
-Serial.println(b); 
-Serial.println(roev); 
-
+// keep values from returning to zero . 
+if( throttleVal > 0  )
+{
+  tempThrottle = throttleVal; 
+}
+else 
+{
+  throttleVal = tempThrottle;
   
+}
+
+
+if( aileronVal > 0  )
+{
+  tempAileron = aileronVal; 
+}
+else 
+{
+  aileronVal = tempAileron;
+  
+}
+
+
+if( pitchVal > 0  )
+{
+  tempPitch = pitchVal; 
+}
+else 
+{
+  pitchVal = tempPitch;
+  
+}
+
+
+
+if( rudderVal > 0  )
+{
+  tempRudder = rudderVal; 
+}
+else 
+{
+  rudderVal = tempRudder;
+  
+}
+
+
+
+
+
+
+
+Serial.print("throttle = "); Serial.println(throttleVal);
+
+Serial.print("rudder = "); Serial.println(rudderVal); 
+Serial.print("aileron = "); Serial.println(aileronVal); 
+Serial.print("pitch = "); Serial.println(pitchVal); 
+
+rudder(rudderVal);
+pitch(pitchVal);
+throttle(throttleVal);
+aileron(aileronVal);
+
+
 }
 
   
@@ -414,16 +479,17 @@ void loop()
   readInputs(); 
   correctInputs();
 
-  // map to ppm output
-  throttle(analog[0]);
-  aileron(analog[3]);
-  pitch(analog[2]);
-  rudder(analog[1]); 
+  // map to ppm output uncomment to use joystick 
+//  throttle(analog[0]);
+//  aileron(analog[3]);
+//  pitch(analog[2]);
+//  rudder(analog[1]); 
 
   
   autoQuadArming();
   switches(); 
   //echo(); 
+  // comment to use joystick 
   messageReading();
   
 
