@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
 # SDU UAS Center TX firmware 
 # Copyright (c) 2018, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
 # SDU UAS Center, http://sdu.dk/uas 
@@ -70,6 +70,8 @@ Revision
 #define PPM_FrLen 22500  //set the PPM frame length in microseconds (1ms = 1000µs)
 #define PPM_PulseLen 300  //set the pulse length
 #define onState 0  //set polarity of the pulses: 1 is positive, 0 is negative
+#define MAX_WORLD_COUNT 5
+#define MIN_WORLD_COUNT 2
 
 /****************************************************************************/
 /* variables */
@@ -78,16 +80,11 @@ Revision
 long ppm[ppm_number];
 long analog[analog_number];
 short count;
+long maxi[4] = {1020, 1017, 1017, 1010};
+long mini[4] = {35, 58, 49, 34};
+int mid[4] = {519, 546, 520, 524};
 boolean led_state;
 boolean buzzer_state;
-int throttleVal;
-int aileronVal;
-int pitchVal;
-int rudderVal; 
-
-  
-
-
 
 /****************************************************************************/
 void setup()
@@ -104,7 +101,7 @@ void setup()
   digitalWrite (PIN_2_POS_SW_LEFT, HIGH);
   digitalWrite (PIN_2_POS_SW_RIGHT, HIGH);
 
-  Serial.begin(115200);
+  Serial.begin(300);
 
   //initiallize default ppm values
   for(int i=0; i<ppm_number; i++)
@@ -210,8 +207,8 @@ void rudder(float value)
  float temp = value;  
 
   ppm[3] = temp*700/1023 + 1150; // yaw (rudder)
+
  
-  
 }
 
 /****************************************************************************/
@@ -230,7 +227,24 @@ void readInputs()
 }
 
 /****************************************************************************/
+void correctInputs()
+{
+ 
 
+  for(int i = 0; i<=3; i++){
+    if  (analog[i] > maxi[i]){
+      maxi[i] = analog[i];}
+      
+    if (analog[i] < mini[i]){
+      mini[i] = analog[i];}
+  
+    if(analog[i] <= mid[i]){
+      analog[i] = ((float)analog[i] - (float)mini[i]) / ((float)mid[i]-(float)mini[i]) * (float)512;}
+    else if(analog[i] > mid[i]){
+      analog[i] = ((float)analog[i] - (float)mid[i]) / ((float)maxi[i]-(float)mid[i]) * (float)511 + (float)512;}
+}
+}
+/****************************************************************************/
 void led() 
 {
   if (count % 200 == 0)
@@ -255,7 +269,7 @@ void switches()
   // handle right 3-way switch
   if (analog[6] < 300)
     ppm[5] = 1150;
-  else if (analog[6] < 700)
+  else if (analog[5] < 700)
     ppm[5] == 1500;
   else
     ppm[5] ==1850; 
@@ -282,28 +296,88 @@ void autoQuadArming()
 }
 
 /****************************************************************************/
+//char messageReading()
+//{
+//  char string[32];
+//  char byteRead;
+//
+//int availableBytes = Serial.available();
+//for(int i=0; i<availableBytes; i++)
+//{
+//   string[i] = Serial.read();
+//}
+//
+/////return string; 
+//  
+//}
 
-void rosCommunication()
+
+/****************************************************************************/
+void messageReading()
+
 {
- 
 
+  char string[32];
+
+
+
+
+  char byteRead;
+
+int availableBytes = Serial.available();
+for(int i=0; i<availableBytes; i++)
+{
+   string[i] = Serial.read();
+}
+
+  char* val;
+  //char inputStr[] = "120:555:666:777";
+  char delimiters[] = ":";
+  val = strtok(string, delimiters);
+  int cmd[] = {0, 0, 0, 0};
+  cmd[0] = 0;
+  cmd[1] = 0;
+  cmd[2] = 0;
+  cmd[3] = 0;
+
+   for(int i = 0; i < 4; i++){
+    cmd[i] = atoi(val);
+   // Serial.println(angle[i]);
+    val = strtok(NULL, delimiters);
+  }
+  
+    Serial.print(" cmd 0 "); Serial.println(cmd[0]);
+   Serial.println("------"); 
+   Serial.print(" cmd 1 "); Serial.println(cmd[1]); 
+   Serial.println("------");
+   Serial.print(" cmd 2 "); Serial.println(cmd[2]); 
+   Serial.println("------");
+   Serial.print(" cmd 3 "); Serial.println(cmd[3]); 
+   Serial.println("------");
+
+
+
+
+
+// Sending the parts to Serial Monitor
+
+
+//  Serial.print("aileron  ");
+//  Serial.print(aileron);
+//  Serial.println();
+//  Serial.print("pitch  ");
+//  Serial.print(pitch);
+//  Serial.println(); 
+//  Serial.print("rudder  ");
+//  Serial.print(rudder);
+//  Serial.println();
+    
   
 }
-/****************************************************************************/
-void messageReading(String msg)  
-{
 
-String temp; 
-
-temp = String(Serial.readStringUntil('$'));
-
-   
-
- 
+  
  
 
-
-}
 
 
 /****************************************************************************/
@@ -366,7 +440,7 @@ void loop()
   // read analog input
    
   readInputs(); 
-
+  correctInputs();
 
   // map to ppm output
   throttle(analog[0]);
@@ -377,7 +451,8 @@ void loop()
   
   autoQuadArming();
   switches(); 
-  echo(); 
+  //echo(); 
+  messageReading();
   
 
     
