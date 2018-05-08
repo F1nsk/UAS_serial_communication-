@@ -1,4 +1,4 @@
-/***************************************************************************
+ /***************************************************************************
 # SDU UAS Center TX firmware 
 # Copyright (c) 2018, Kjeld Jensen <kjen@mmmi.sdu.dk> <kj@kjen.dk>
 # SDU UAS Center, http://sdu.dk/uas 
@@ -70,6 +70,8 @@ Revision
 #define PPM_FrLen 22500  //set the PPM frame length in microseconds (1ms = 1000µs)
 #define PPM_PulseLen 300  //set the pulse length
 #define onState 0  //set polarity of the pulses: 1 is positive, 0 is negative
+#define MAX_WORLD_COUNT 5
+#define MIN_WORLD_COUNT 2
 
 /****************************************************************************/
 /* variables */
@@ -78,16 +80,11 @@ Revision
 long ppm[ppm_number];
 long analog[analog_number];
 short count;
+long maxi[4] = {1020, 1017, 1017, 1010};
+long mini[4] = {35, 58, 49, 34};
+int mid[4] = {519, 546, 520, 524};
 boolean led_state;
 boolean buzzer_state;
-int throttleVal;
-int aileronVal;
-int pitchVal;
-int rudderVal; 
-
-  
-
-
 
 /****************************************************************************/
 void setup()
@@ -169,7 +166,7 @@ ISR(TIMER1_COMPA_vect)
 }
 /****************************************************************************/
 
-void throttle(float value)
+void throttle(float value) 
 {
 
  float temp = value;  
@@ -210,8 +207,13 @@ void rudder(float value)
  float temp = value;  
 
   ppm[3] = temp*700/1023 + 1150; // yaw (rudder)
+
+ //Serial.print("r-temp = "); Serial.println(temp); 
+
+
+
+
  
-  
 }
 
 /****************************************************************************/
@@ -230,7 +232,24 @@ void readInputs()
 }
 
 /****************************************************************************/
+void correctInputs()
+{
+ 
 
+  for(int i = 0; i<=3; i++){
+    if  (analog[i] > maxi[i]){
+      maxi[i] = analog[i];}
+      
+    if (analog[i] < mini[i]){
+      mini[i] = analog[i];}
+  
+    if(analog[i] <= mid[i]){
+      analog[i] = ((float)analog[i] - (float)mini[i]) / ((float)mid[i]-(float)mini[i]) * (float)512;}
+    else if(analog[i] > mid[i]){
+      analog[i] = ((float)analog[i] - (float)mid[i]) / ((float)maxi[i]-(float)mid[i]) * (float)511 + (float)512;}
+}
+}
+/****************************************************************************/
 void led() 
 {
   if (count % 200 == 0)
@@ -255,7 +274,7 @@ void switches()
   // handle right 3-way switch
   if (analog[6] < 300)
     ppm[5] = 1150;
-  else if (analog[6] < 700)
+  else if (analog[5] < 700)
     ppm[5] == 1500;
   else
     ppm[5] ==1850; 
@@ -282,28 +301,120 @@ void autoQuadArming()
 }
 
 /****************************************************************************/
+//char messageReading()
+//{
+//  char string[32];
+//  char byteRead;
+//
+//int availableBytes = Serial.available();
+//for(int i=0; i<availableBytes; i++)
+//{
+//   string[i] = Serial.read();
+//}
+//
+/////return string; 
+//  
+//}
 
-void rosCommunication()
+
+/****************************************************************************/
+void messageReading()
 {
- 
 
+static int tempRudder, tempPitch, tempThrottle, tempAileron; 
+
+
+String input = Serial.readString();
+Serial.print(input);
+
+
+
+ 
+int commaIndex = input.indexOf(':');
+
+int secondCommaIndex = input.indexOf(':', commaIndex + 1);
+
+int thirdCommaIndex = input.indexOf(':', secondCommaIndex + 1);
+
+String firstValue = input.substring(0, commaIndex);
+String secondValue = input.substring(commaIndex + 1, secondCommaIndex);
+String thirdValue = input.substring(secondCommaIndex + 1); // To the end of the string
+String fourthValue = input.substring(thirdCommaIndex +1); 
+
+
+long rudderVal = secondValue.toInt();
+long aileronVal = fourthValue.toInt();
+long pitchVal = thirdValue.toInt(); 
+long throttleVal = firstValue.toInt();
+
+// keep values from returning to zero . 
+if( throttleVal > 0  )
+{
+  tempThrottle = throttleVal; 
+}
+else 
+{
+  throttleVal = tempThrottle;
   
 }
-/****************************************************************************/
-void messageReading(String msg)  
+
+
+if( aileronVal > 0  )
 {
+  tempAileron = aileronVal; 
+}
+else 
+{
+  aileronVal = tempAileron;
+  
+}
 
-String temp; 
 
-temp = String(Serial.readStringUntil('$'));
+if( pitchVal > 0  )
+{
+  tempPitch = pitchVal; 
+}
+else 
+{
+  pitchVal = tempPitch;
+  
+}
 
-   
 
- 
- 
+
+if( rudderVal > 0  )
+{
+  tempRudder = rudderVal; 
+}
+else 
+{
+  rudderVal = tempRudder;
+  
+}
+
+
+
+
+
+
+
+Serial.print("throttle = "); Serial.println(throttleVal);
+
+Serial.print("rudder = "); Serial.println(rudderVal); 
+Serial.print("aileron = "); Serial.println(aileronVal); 
+Serial.print("pitch = "); Serial.println(pitchVal); 
+
+rudder(rudderVal);
+pitch(pitchVal);
+throttle(throttleVal);
+aileron(aileronVal);
 
 
 }
+
+  
+ 
+
 
 
 /****************************************************************************/
@@ -366,18 +477,20 @@ void loop()
   // read analog input
    
   readInputs(); 
+  correctInputs();
 
-
-  // map to ppm output
-  throttle(analog[0]);
-  aileron(analog[3]);
-  pitch(analog[2]);
-  rudder(analog[1]); 
+  // map to ppm output uncomment to use joystick 
+//  throttle(analog[0]);
+//  aileron(analog[3]);
+//  pitch(analog[2]);
+//  rudder(analog[1]); 
 
   
   autoQuadArming();
   switches(); 
-  echo(); 
+  //echo(); 
+  // comment to use joystick 
+  messageReading();
   
 
     
